@@ -27,7 +27,7 @@ export class UserController {
           status: HttpStatus.INTERNAL_SERVER_ERROR,
           error: "Error : can't create user",
         },
-        HttpStatus.REQUEST_TIMEOUT,
+        HttpStatus.INTERNAL_SERVER_ERROR,
         {
           cause: error,
         },
@@ -43,9 +43,9 @@ export class UserController {
       throw new HttpException(
         {
           status: HttpStatus.NOT_FOUND,
-          error: 'Users not found',
+          error: 'No Users',
         },
-        HttpStatus.FORBIDDEN,
+        HttpStatus.NOT_FOUND,
         {
           cause: error,
         },
@@ -53,17 +53,56 @@ export class UserController {
     }
   }
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.userService.findOne(+id);
+  async findOne(@Param('id') id: string) {
+    try {
+      await this.userService.findOne(+id);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.NOT_FOUND,
+          error: 'Users not found',
+        },
+        HttpStatus.NOT_FOUND,
+        {
+          cause: error,
+        },
+      );
+    }
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.userService.update(+id, updateUserDto);
+  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    try {
+      await this.userService.update(+id, updateUserDto);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: "Can't update the user",
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: error,
+        },
+      );
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.userService.remove(+id);
+  async remove(@Param('id') id: string) {
+    try {
+      await this.userService.remove(+id);
+    } catch (error) {
+      throw new HttpException(
+        {
+          status: HttpStatus.BAD_REQUEST,
+          error: "Can't remove the user",
+        },
+        HttpStatus.BAD_REQUEST,
+        {
+          cause: error,
+        },
+      );
+    }
   }
 }
