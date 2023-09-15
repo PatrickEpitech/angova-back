@@ -13,7 +13,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-@Controller('user')
+@Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
@@ -37,20 +37,32 @@ export class UserController {
 
   @Get()
   async findAll() {
+    console.log("sddd")
     try {
-      await this.userService.findAll();
+      const users = await this.userService.findAll();
+      if (!users) {
+        throw new HttpException(
+            {
+              status: HttpStatus.NOT_FOUND,
+              error: 'No Users',
+            },
+            HttpStatus.NOT_FOUND,
+        );
+      }
+      return users;
     } catch (error) {
       throw new HttpException(
-        {
-          status: HttpStatus.NOT_FOUND,
-          error: 'No Users',
-        },
-        HttpStatus.NOT_FOUND,
-        {
-          cause: error,
-        },
+          {
+            status: HttpStatus.INTERNAL_SERVER_ERROR,
+            error: "Error: can't fetch users",
+          },
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          {
+            cause: error,
+          },
       );
     }
+
   }
   @Get(':id')
   async findOne(@Param('id') id: string) {
