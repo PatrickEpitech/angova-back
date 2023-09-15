@@ -7,5 +7,4 @@ export class Role extends Document {
   name: string;
 }
 
-export const RoleSchema = SchemaFactory.createForClass(Role);
 export const RoleModel = SchemaFactory.createForClass(Role);

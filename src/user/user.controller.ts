@@ -1,7 +1,6 @@
 import {
   Controller,
   Get,
-  Post,
   Body,
   Patch,
   Param,
@@ -10,30 +9,13 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  async create(@Body() createUserDto: CreateUserDto) {
-    try {
-      await this.userService.create(createUserDto);
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: HttpStatus.INTERNAL_SERVER_ERROR,
-          error: "Error : can't create user",
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        {
-          cause: error,
-        },
-      );
-    }
-  }
+
 
   @Get()
   async findAll() {
@@ -62,8 +44,8 @@ export class UserController {
           },
       );
     }
-
   }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
@@ -78,6 +60,24 @@ export class UserController {
         {
           cause: error,
         },
+      );
+    }
+  }
+
+  @Get(':id')
+  async findOneById(@Param('email') email: string) {
+    try {
+      await this.userService.findOne(+email);
+    } catch (error) {
+      throw new HttpException(
+          {
+            status: HttpStatus.NOT_FOUND,
+            error: 'Users not found',
+          },
+          HttpStatus.NOT_FOUND,
+          {
+            cause: error,
+          },
       );
     }
   }
