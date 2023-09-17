@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
+import mongoose  from 'mongoose';
+import { Document} from "mongoose";
 import { Role } from '../../role/entities/role.entity';
 
-export type UserDocument = HydratedDocument<User>;
+export type UserDocument = User & Document;
 
 @Schema({
   timestamps: true
@@ -20,6 +21,9 @@ export class User {
 
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Role' })
   role: Role;
+
+  @Prop()
+  refreshToken: string;
 
 }
 

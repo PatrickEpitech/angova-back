@@ -6,115 +6,39 @@ import {
   Param,
   Delete,
   HttpException,
-  HttpStatus,
+  HttpStatus, Post,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import  { SignupDto} from "../auth/dto/signup.dto";
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
 
+  @Post()
+  create(@Body() SignupDto: SignupDto) {
+    return this.userService.create(SignupDto);
+  }
 
   @Get()
-  async findAll() {
-    console.log("sddd")
-    try {
-      const users = await this.userService.findAll();
-      if (!users) {
-        throw new HttpException(
-            {
-              status: HttpStatus.NOT_FOUND,
-              error: 'No Users',
-            },
-            HttpStatus.NOT_FOUND,
-        );
-      }
-      return users;
-    } catch (error) {
-      throw new HttpException(
-          {
-            status: HttpStatus.INTERNAL_SERVER_ERROR,
-            error: "Error: can't fetch users",
-          },
-          HttpStatus.INTERNAL_SERVER_ERROR,
-          {
-            cause: error,
-          },
-      );
-    }
+  findAll() {
+    return this.userService.findAll();
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    try {
-      await this.userService.findOne(+id);
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: HttpStatus.NOT_FOUND,
-          error: 'Users not found',
-        },
-        HttpStatus.NOT_FOUND,
-        {
-          cause: error,
-        },
-      );
-    }
-  }
-
-  @Get(':id')
-  async findOneById(@Param('email') email: string) {
-    try {
-      await this.userService.findOne(+email);
-    } catch (error) {
-      throw new HttpException(
-          {
-            status: HttpStatus.NOT_FOUND,
-            error: 'Users not found',
-          },
-          HttpStatus.NOT_FOUND,
-          {
-            cause: error,
-          },
-      );
-    }
+  findById(@Param('id') id: string) {
+    return this.userService.findById(id);
   }
 
   @Patch(':id')
-  async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    try {
-      await this.userService.update(+id, updateUserDto);
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: "Can't update the user",
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: error,
-        },
-      );
-    }
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(id, updateUserDto);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    try {
-      await this.userService.remove(+id);
-    } catch (error) {
-      throw new HttpException(
-        {
-          status: HttpStatus.BAD_REQUEST,
-          error: "Can't remove the user",
-        },
-        HttpStatus.BAD_REQUEST,
-        {
-          cause: error,
-        },
-      );
-    }
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
   }
 }

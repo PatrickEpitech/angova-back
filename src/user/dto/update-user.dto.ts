@@ -6,4 +6,5 @@ export class UpdateUserDto extends PartialType(SignupDto) {
   email?: string;
   password?: string;
   role?: string;
+  refreshToken?:string;
 }

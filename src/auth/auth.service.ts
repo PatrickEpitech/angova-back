@@ -1,60 +1,106 @@
-import {HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
+import {BadRequestException, HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
 import {InjectModel} from "@nestjs/mongoose";
 import * as bcrypt from 'bcrypt';
 import {User} from "../user/entities/user.entity";
 import {Model} from "mongoose";
-import { JwtService} from "@nestjs/jwt";
+import {JwtService} from "@nestjs/jwt";
 import {SignupDto} from "../auth/dto/signup.dto";
+import {UserService} from "../user/user.service";
+import {ConfigService} from "@nestjs/config";
+import {LoginDto} from "./dto/login.dto";
 
 @Injectable()
 export class AuthService {
     constructor(
-        @InjectModel(User.name)
-        private userModel: Model<User>,
+        private userService: UserService,
+        private configService: ConfigService,
         private jwtService: JwtService,
     ) {
 
 
     }
 
-    async SignUp(SignupDto): Promise<{token: string}> {
-        console.log("here")
-        const {email, username, role, password} = SignupDto
-        console.log("email",email)
-        console.log("username",username)
-        console.log("role",role)
-        console.log("password",password)
-        const hashedPassword = await bcrypt.hash(password,10)
-        console.log("here", hashedPassword)
-        const user = await this.userModel.create({
-            email,
-            username,
-            role,
-            password: hashedPassword
-        })
-        const token = this.jwtService.sign({
-            id: user._id,
-            role: user.role
-        })
-        return { token }
+
+    async SignUp(SignupDto) {
+        const userExists = await this.userService.findByEmail(
+            SignupDto.email,
+        );
+        if (userExists) {
+            throw new BadRequestException('User already exists');
+        }
+
+        const hash = await this.hashData(SignupDto.password)
+        const user = await this.userService.create({
+            ...SignupDto,
+            password: hash,
+        });
+
+
+        const tokens = await this.getTokens(user._id, user.email);
+        await this.updateRefreshToken(user._id, tokens.refreshToken);
+        return tokens;
+
     }
 
-    async login(loginDto): Promise<{ token: string }> {
-        console.log("???")
-        const { email, password } = loginDto;
-        console.log(email, " " , password)
-        const user = await this.userModel.findOne({ email: email  });
-        if (!user) {
-            throw new HttpException({ message: 'Utilisateur introuvable' }, HttpStatus.NOT_FOUND);
-        }
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+    hashData(data: string) {
+        return bcrypt.hash(data, 10);
+    }
+
+
+    async login(data: LoginDto) {
+        const user = await this.userService.findByEmail(data.email);
+        console.log(data.password, " ", data.email)
+        if (!user) throw new BadRequestException('User does not exist');
+        const isPasswordValid = await bcrypt.compare(data.password, user.password);
         if (!isPasswordValid) {
-            throw new HttpException({ message: 'Mot de passe incorrect' }, HttpStatus.UNAUTHORIZED);
+            throw new HttpException({message: 'email or password is/are incorrect'}, HttpStatus.UNAUTHORIZED);
         }
-        const token = this.jwtService.sign({
-            id: user.id,
-            role: user.role,
+        const tokens = await this.getTokens(user._id, user.email);
+        await this.updateRefreshToken(user._id, tokens.refreshToken);
+        return {tokens};
+    }
+
+    async logout(userId: string) {
+        return this.userService.update(userId, {refreshToken: null});
+    }
+
+
+    async updateRefreshToken(userId: string, refreshToken: string) {
+        const hashedRefreshToken = await this.hashData(refreshToken);
+        await this.userService.update(userId, {
+            refreshToken: hashedRefreshToken,
         });
-        return { token };
+    }
+
+    async getTokens(userId: string, username: string) {
+        const [accessToken, refreshToken] = await Promise.all([
+            this.jwtService.signAsync(
+                {
+                    sub: userId,
+                    username,
+                },
+                {
+                    secret: this.configService.get<string>('JWT_SECRET'),
+                    expiresIn: '15m',
+                },
+            ),
+            this.jwtService.signAsync(
+                {
+                    sub: userId,
+                    username,
+                },
+                {
+                    secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
+                    expiresIn: '7d',
+                },
+            ),
+        ]);
+        return {
+            accessToken,
+            refreshToken,
+        };
     }
 }
+
+
+

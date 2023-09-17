@@ -17,4 +17,6 @@ export class SignupDto{
     @IsNotEmpty()
     @IsNumber()
     readonly role: string;
+
+
 }
