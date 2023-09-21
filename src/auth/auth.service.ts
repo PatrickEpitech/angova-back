@@ -1,13 +1,10 @@
 import {BadRequestException, HttpException, HttpStatus, Inject, Injectable} from '@nestjs/common';
-import {InjectModel} from "@nestjs/mongoose";
 import * as bcrypt from 'bcrypt';
-import {User} from "../user/entities/user.entity";
-import {Model} from "mongoose";
 import {JwtService} from "@nestjs/jwt";
-import {SignupDto} from "../auth/dto/signup.dto";
 import {UserService} from "../user/user.service";
 import {ConfigService} from "@nestjs/config";
 import {LoginDto} from "./dto/login.dto";
+import {RefreshTokenDto} from "./dto/refresh-token.dto"
 
 @Injectable()
 export class AuthService {
@@ -37,7 +34,7 @@ export class AuthService {
 
 
         const tokens = await this.getTokens(user._id, user.email);
-        await this.updateRefreshToken(user._id, tokens.refreshToken);
+        await this.refresh(user._id, tokens.refreshToken);
         return tokens;
 
     }
@@ -56,7 +53,7 @@ export class AuthService {
             throw new HttpException({message: 'email or password is/are incorrect'}, HttpStatus.UNAUTHORIZED);
         }
         const tokens = await this.getTokens(user._id, user.email);
-        await this.updateRefreshToken(user._id, tokens.refreshToken);
+        await this.refresh(user._id, tokens.refreshToken);
         return {tokens};
     }
 
@@ -65,11 +62,16 @@ export class AuthService {
     }
 
 
-    async updateRefreshToken(userId: string, refreshToken: string) {
-        const hashedRefreshToken = await this.hashData(refreshToken);
+    async refresh(userId: string, RefreshTokenDto: string) {
+        const hashedRefreshToken = await this.hashData(RefreshTokenDto);
         await this.userService.update(userId, {
             refreshToken: hashedRefreshToken,
         });
+        const newAccessToken = this.jwtService.sign({ sub: userId });
+
+        const newRefreshToken = this.jwtService.sign({ sub: userId }, { expiresIn: '7d' });
+
+        return { newAccessToken, newRefreshToken };
     }
 
     async getTokens(userId: string, username: string) {
