@@ -25,24 +25,19 @@ export class AuthService {
         if (userExists) {
             throw new BadRequestException('User already exists');
         }
-
         const hash = await this.hashData(SignupDto.password)
         const user = await this.userService.create({
             ...SignupDto,
             password: hash,
         });
-
-
         const tokens = await this.getTokens(user._id, user.email);
         await this.refresh(user._id, tokens.refreshToken);
         return tokens;
-
     }
 
     hashData(data: string) {
         return bcrypt.hash(data, 10);
     }
-
 
     async login(data: LoginDto) {
         const user = await this.userService.findByEmail(data.email);
@@ -61,20 +56,19 @@ export class AuthService {
         return this.userService.update(userId, {refreshToken: null});
     }
 
-
-    async refresh(userId: string, RefreshTokenDto: string) {
+    async refresh(userId: string, RefreshTokenDto: string)
+    {
         const hashedRefreshToken = await this.hashData(RefreshTokenDto);
         await this.userService.update(userId, {
             refreshToken: hashedRefreshToken,
         });
         const newAccessToken = this.jwtService.sign({ sub: userId });
-
         const newRefreshToken = this.jwtService.sign({ sub: userId }, { expiresIn: '7d' });
-
         return { newAccessToken, newRefreshToken };
     }
 
-    async getTokens(userId: string, username: string) {
+    async getTokens(userId: string, username: string)
+    {
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(
                 {
