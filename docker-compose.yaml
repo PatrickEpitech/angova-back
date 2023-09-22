@@ -1,0 +1,38 @@
+version: "3.9"
+services:
+
+  api:
+    build: 
+      context: .
+      dockerfile: ./dockerfile
+      target: development
+    container_name: angova-nest-api
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    ports:
+      - 3000:3000
+    depends_on:
+      - database
+    env_file: .env 
+    environment:
+      NODE_ENV: development
+    networks:
+      - dev
+    command: pnpm run start:dev
+
+  database:
+    image: mongo:latest
+    restart: always
+    volumes:
+      - database-data:/data/db
+    ports:
+      - 27017:27017
+    networks:
+      - dev
+      
+volumes:
+  database-data:
+
+networks:
+  dev: 
