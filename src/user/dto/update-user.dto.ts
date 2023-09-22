@@ -1,13 +1,15 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-user.dto';
-import { User } from '../entities/user.entity';
-import { Role } from 'src/role/entities/role.entity';
+import { SignupDto } from '../../auth/dto/signup.dto';
+import {ApiProperty} from "@nestjs/swagger";
 
-export class UpdateUserDto extends PartialType(CreateUserDto) {
+export class UpdateUserDto extends PartialType(SignupDto) {
+  @ApiProperty()
   username?: string;
+  @ApiProperty()
   email?: string;
+  @ApiProperty()
   password?: string;
-  admin?: User;
-  manager?: User;
-  role?: Role;
+  @ApiProperty()
+  role?: string;
+  refreshToken?:string;
 }
