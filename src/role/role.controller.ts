@@ -19,7 +19,7 @@ export class RoleController {
   @Post()
   async create(@Body() createRoleDto: CreateRoleDto) {
     try {
-      this.roleService.create(createRoleDto);
+      await this.roleService.create(createRoleDto);
     } catch (error) {
       throw new HttpException(
         {
@@ -37,7 +37,7 @@ export class RoleController {
   @Get()
   async findAll() {
     try {
-      this.roleService.findAll();
+      await this.roleService.findAll();
     } catch (error) {
       throw new HttpException(
         {
@@ -55,7 +55,7 @@ export class RoleController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     try {
-      this.roleService.findOne(+id);
+      await this.roleService.findOne(id);
     } catch (error) {
       throw new HttpException(
         {
@@ -73,7 +73,7 @@ export class RoleController {
   @Delete(':id')
   async remove(@Param('id') id: string) {
     try {
-      this.roleService.remove(+id);
+      await this.roleService.remove(id);
     } catch (error) {
       throw new HttpException(
         {
