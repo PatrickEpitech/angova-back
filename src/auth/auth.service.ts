@@ -4,10 +4,7 @@ import {JwtService} from "@nestjs/jwt";
 import {UserService} from "../user/user.service";
 import {ConfigService} from "@nestjs/config";
 import {LoginDto} from "./dto/login.dto";
-import {RefreshTokenDto} from "./dto/refresh-token.dto"
 import {Role} from "../role/entities/role.entity";
-import {name} from "ts-jest/dist/transformers/hoist-jest";
-import {rootCertificates} from "tls";
 
 @Injectable()
 export class AuthService {
@@ -16,8 +13,6 @@ export class AuthService {
         private configService: ConfigService,
         private jwtService: JwtService,
     ) {
-
-
     }
 
 
@@ -28,6 +23,7 @@ export class AuthService {
         if (userExists) {
             throw new BadRequestException('User already exists');
         }
+
         const hash = await this.hashData(SignupDto.password)
         const user = await this.userService.create({
             ...SignupDto,
@@ -35,8 +31,11 @@ export class AuthService {
         });
         const tokens = await this.getTokens(user._id, user.role);
         await this.refresh(user._id, tokens.refreshToken);
+
         return tokens;
     }
+
+
 
     hashData(data: string) {
         return bcrypt.hash(data, 10);
@@ -51,10 +50,10 @@ export class AuthService {
             throw new HttpException({message: 'email or password is/are incorrect'}, HttpStatus.UNAUTHORIZED);
         }
         const tokens = await this.getTokens(user._id, user.role._id);
-        console.log(user)
-        await this.refresh(user._id, tokens.refreshToken);
         return {tokens};
     }
+
+
 
     async logout(userId: string) {
         return this.userService.update(userId, {refreshToken: null});
@@ -71,8 +70,8 @@ export class AuthService {
         return { newAccessToken, newRefreshToken };
     }
 
+
     async getTokens(userId: string, roleId: Role) {
-        
         const [accessToken, refreshToken] = await Promise.all([
             this.jwtService.signAsync(
                 {
@@ -86,8 +85,7 @@ export class AuthService {
             ),
             this.jwtService.signAsync(
                 {
-                     userId,
-                     roleId,
+                    userId,
                 },
                 {
                     secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
@@ -95,14 +93,11 @@ export class AuthService {
                 },
             ),
         ]);
-
         return {
             accessToken,
             refreshToken,
         };
     }
-
-
 }
 
 
