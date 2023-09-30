@@ -6,7 +6,6 @@ services:
       context: .
       dockerfile: ./dockerfile
       target: development
-    container_name: angova-nest-api
     volumes:
       - ./:/usr/src/app
       - /usr/src/app/node_modules
