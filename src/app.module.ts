@@ -8,10 +8,12 @@ import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from "@nestjs/mongoose";
 import { UserModel } from './user/entities/user.entity';
 import { RoleModel } from './role/entities/role.entity';
+import { StorageModule } from './storage/storage.module';
 
 
 @Module({
   imports: [
+    StorageModule,
     UserModule,
     RoleModule,
     AuthModule,
@@ -30,7 +32,8 @@ import { RoleModel } from './role/entities/role.entity';
         });
         return connection;
       },
-    })
+    }),
+    
   ],
   controllers: [AppController],
   providers: [AppService],
